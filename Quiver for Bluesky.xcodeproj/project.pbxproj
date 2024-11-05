@@ -10,9 +10,33 @@
 		84DEE88B2CD6D17F002140AD /* Quiver for Bluesky.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Quiver for Bluesky.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		849C51B42CD9798600622A14 /* Exceptions for "Quiver for Bluesky" folder in "Quiver for Bluesky" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/Models/atproto/feed_generators.json,
+			);
+			target = 84DEE88A2CD6D17F002140AD /* Quiver for Bluesky */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		849C51B52CD9798600622A14 /* Exceptions for "Quiver for Bluesky" folder in "Compile Sources" phase from "Quiver for Bluesky" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 84DEE8872CD6D17F002140AD /* Sources */;
+			membershipExceptions = (
+				Core/Models/atproto/feed_generators.json,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		84DEE88D2CD6D17F002140AD /* Quiver for Bluesky */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				849C51B42CD9798600622A14 /* Exceptions for "Quiver for Bluesky" folder in "Quiver for Bluesky" target */,
+				849C51B52CD9798600622A14 /* Exceptions for "Quiver for Bluesky" folder in "Compile Sources" phase from "Quiver for Bluesky" target */,
+			);
 			path = "Quiver for Bluesky";
 			sourceTree = "<group>";
 		};
