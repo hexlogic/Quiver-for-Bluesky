@@ -1,6 +1,11 @@
 // MARK: - Feed Response
 
 import Foundation
+
+struct PostsResponseModel: Codable {
+    let posts: [PostModel]?
+}
+
 struct FeedResponseModel: Codable {
     let feed: [FeedItemModel]?
     let cursor: String?
@@ -24,16 +29,30 @@ struct FeedResponseModel: Codable {
     }
 }
 
+struct FeedItemReplyModel: Codable {
+    let parent: PostModel?
+    let root: PostModel?
+}
+
 // MARK: - Feed Item
-struct FeedItemModel: Codable, Identifiable {
+struct FeedItemModel: Codable, Identifiable, Equatable {
+    static func == (lhs: FeedItemModel, rhs: FeedItemModel) -> Bool {
+        lhs.id == rhs.id
+    }
+    
     var id: UUID = UUID()
     
     let post: PostModel?
+    let reason: ReasonModel?
     let feedContext: String?
+    let reply: FeedItemReplyModel?
+    
     
     enum CodingKeys: String, CodingKey {
         case post
         case feedContext
+        case reason
+        case reply
     }
     
     func encode(to encoder: any Encoder) throws {
@@ -41,12 +60,27 @@ struct FeedItemModel: Codable, Identifiable {
         
         try container.encode(post, forKey: .post)
         try container.encode(feedContext, forKey: .feedContext)
+        try container.encode(reason, forKey: .reason)
     }
     
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.post = try container.decodeIfPresent(PostModel.self, forKey: .post)
         self.feedContext = try container.decodeIfPresent(String.self, forKey: .feedContext)
+        self.reason = try container.decodeIfPresent(ReasonModel.self, forKey: .reason)
+        self.reply = try container.decodeIfPresent(FeedItemReplyModel.self, forKey: .reply)
+    }
+}
+
+struct ReasonModel: Codable {
+    let type: String
+    let by: AuthorModel?
+    let indexedAt: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case type = "$type"
+        case by
+        case indexedAt
     }
 }
 
@@ -64,6 +98,7 @@ struct PostModel: Codable {
     let indexedAt: String?
     let labels: [LabelModel]?
     let threadgate: ThreadgateModel?
+    let viewer: ViewerModel?
     
     enum CodingKeys: String, CodingKey {
         case uri
@@ -78,6 +113,7 @@ struct PostModel: Codable {
         case indexedAt
         case labels
         case threadgate
+        case viewer
     }
     
     func encode(to encoder: any Encoder) throws {
@@ -94,6 +130,7 @@ struct PostModel: Codable {
         try container.encode(indexedAt, forKey: .indexedAt)
         try container.encode(labels, forKey: .labels)
         try container.encode(threadgate, forKey: .threadgate)
+        try container.encode(viewer, forKey: .viewer)
     }
     
     init(from decoder: any Decoder) throws {
@@ -110,6 +147,37 @@ struct PostModel: Codable {
         self.indexedAt = try container.decodeIfPresent(String.self, forKey: .indexedAt)
         self.labels = try container.decodeIfPresent([LabelModel].self, forKey: .labels)
         self.threadgate = try container.decodeIfPresent(ThreadgateModel.self, forKey: .threadgate)
+        self.viewer = try container.decodeIfPresent(ViewerModel.self, forKey: .viewer)
+    }
+}
+
+struct ViewerModel: Codable {
+    let repost: String?
+    let like: String?
+    let threadMuted: Bool?
+    let replyDisabled: Bool?
+    let pinned: Bool?
+    
+    enum CodingKeys: String, CodingKey {
+        case repost, like, threadMuted, replyDisabled, pinned
+    }
+    
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.repost = try container.decodeIfPresent(String.self, forKey: .repost)
+        self.like = try container.decodeIfPresent(String.self, forKey: .like)
+        self.threadMuted = try container.decodeIfPresent(Bool.self, forKey: .threadMuted)
+        self.replyDisabled = try container.decodeIfPresent(Bool.self, forKey: .replyDisabled)
+        self.pinned = try container.decodeIfPresent(Bool.self, forKey: .pinned)
+    }
+    
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(repost, forKey: .repost)
+        try container.encode(like, forKey: .like)
+        try container.encode(threadMuted, forKey: .threadMuted)
+        try container.encode(replyDisabled, forKey: .replyDisabled)
+        try container.encode(pinned, forKey: .pinned)
     }
 }
 
@@ -266,10 +334,12 @@ struct EmbedModel: Codable {
     let externalBSViewModel: ExternalBSViewModel?
     let images: [EmbedImageModel]?
     let record: EmbedRecordModel?
+    let playlist: String?
+    let aspectRatio: AspectRatioModel?
     
     enum CodingKeys: String, CodingKey {
         case type = "$type"
-        case external, images, record
+        case external, images, record, playlist, aspectRatio
     }
     
     init(from decoder: any Decoder) throws {
@@ -278,6 +348,8 @@ struct EmbedModel: Codable {
         
         self.images = try container.decodeIfPresent([EmbedImageModel].self, forKey: .images)
         self.record = try container.decodeIfPresent(EmbedRecordModel.self, forKey: .record)
+        self.playlist = try container.decodeIfPresent(String.self, forKey: .playlist)
+        self.aspectRatio = try container.decodeIfPresent(AspectRatioModel.self, forKey: .aspectRatio)
         if(self.type == "app.bsky.embed.external") {
             self.external = try container.decodeIfPresent(ExternalModel.self, forKey: .external)
             self.externalBSViewModel = nil
@@ -297,6 +369,8 @@ struct EmbedModel: Codable {
         try container.encode(external, forKey: .external)
         try container.encode(images, forKey: .images)
         try container.encode(record, forKey: .record)
+        try container.encode(playlist, forKey: .playlist)
+        try container.encode(aspectRatio, forKey: .aspectRatio)
     }
 }
 
@@ -418,21 +492,96 @@ struct AspectRatioModel: Codable, Hashable {
 struct EmbedRecordModel: Codable {
     let cid: String?
     let uri: String?
+    let author: AuthorModel?
+    let indexedAt: String?
+    let likeCount: Int?
+    let quoteCount: Int?
+    let replyCount: Int?
+    let repostCount: Int?
+    let value: PostEmbedValue?
+    let type: String?
+    let creator: AuthorModel?
+    let avatar: String?
+    let name: String?
+    let description: String?
     
     enum CodingKeys: String, CodingKey {
-        case cid, uri
+        case cid
+        case uri
+        case author
+        case indexedAt
+        case likeCount
+        case quoteCount
+        case replyCount
+        case repostCount
+        case value
+        case type = "$type"
+        case creator
+        case avatar
+        case name
+        case description
     }
     
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.cid = try container.decodeIfPresent(String.self, forKey: .cid)
         self.uri = try container.decodeIfPresent(String.self, forKey: .uri)
+        self.author = try container.decodeIfPresent(AuthorModel.self, forKey: .author)
+        self.indexedAt = try container.decodeIfPresent(String.self, forKey: .indexedAt)
+        self.likeCount = try container.decodeIfPresent(Int.self, forKey: .likeCount)
+        self.quoteCount = try container.decodeIfPresent(Int.self, forKey: .quoteCount)
+        self.replyCount = try container.decodeIfPresent(Int.self, forKey: .replyCount)
+        self.repostCount = try container.decodeIfPresent(Int.self, forKey: .repostCount)
+        self.value = try container.decodeIfPresent(PostEmbedValue.self, forKey: .value)
+        self.type = try container.decodeIfPresent(String.self, forKey: .type)
+        self.creator = try container.decodeIfPresent(AuthorModel.self, forKey: .creator)
+        self.avatar = try container.decodeIfPresent(String.self, forKey: .avatar)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name)
+        self.description = try container.decodeIfPresent(String.self, forKey: .description)
     }
     
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(cid, forKey: .cid)
         try container.encode(uri, forKey: .uri)
+        try container.encode(author, forKey: .author)
+        try container.encode(indexedAt, forKey: .indexedAt)
+        try container.encode(likeCount, forKey: .likeCount)
+        try container.encode(quoteCount, forKey: .quoteCount)
+        try container.encode(replyCount, forKey: .replyCount)
+        try container.encode(repostCount, forKey: .repostCount)
+        try container.encode(value, forKey: .value)
+        try container.encodeIfPresent(type, forKey: .type)
+        try container.encodeIfPresent(creator, forKey: .creator)
+        try container.encodeIfPresent(avatar, forKey: .avatar)
+        try container.encodeIfPresent(name, forKey: .name)
+        try container.encodeIfPresent(description, forKey: .description)
+    }
+}
+
+struct PostEmbedValue: Codable {
+    let type: String?
+    var createdAt: String?
+    let text: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case type = "$type"
+        case createdAt
+        case text
+    }
+    
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.type = try container.decodeIfPresent(String.self, forKey: .type)
+        self.createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
+        self.text = try container.decodeIfPresent(String.self, forKey: .text)
+    }
+    
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(type, forKey: .type)
+        try container.encodeIfPresent(createdAt, forKey: .createdAt)
+        try container.encodeIfPresent(text, forKey: .text)
     }
 }
 

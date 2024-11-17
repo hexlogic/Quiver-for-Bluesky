@@ -13,9 +13,24 @@ struct RequestBuilder {
     }
     
     mutating func setQueryParameters(_ parameters: [String: Any]) -> RequestBuilder {
-        urlComponents.queryItems = parameters.map { key, value in
-            URLQueryItem(name: key, value: "\(value)")
+        var components = self.urlComponents
+        
+        let queryItems = parameters.flatMap { (key, value) -> [URLQueryItem] in
+            if let array = value as? [String] {
+                // Handle array parameters by creating multiple query items with the same key
+                return array.map { URLQueryItem(name: key, value: $0) }
+            } else {
+                // Handle regular single-value parameters
+                return [URLQueryItem(name: key, value: "\(value)")]
+            }
         }
+        
+        components.queryItems = queryItems
+        
+        
+        self.urlComponents = components
+        
+        
         return self
     }
     
@@ -44,19 +59,16 @@ struct RequestBuilder {
 }
 
 class NetworkClient: NetworkClientProtocol {
-    private let authManager: AuthenticationManager
     private let session: URLSession
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
     
-    private let baseURL: URL
+    private var baseURL: URL
     
     init(
-        baseURL: URL = URL(string: "https://public.api.bsky.app/xrpc")!,
-        authManager: AuthenticationManager,
+        baseURL: URL = URL(string: "https://bsky.social/xrpc")!,
         session: URLSession = .shared
     ) {
-        self.authManager = authManager
         self.session = session
         self.decoder = JSONDecoder()
         self.encoder = JSONEncoder()
@@ -72,6 +84,11 @@ class NetworkClient: NetworkClientProtocol {
         queryParameters: [String: Any] = [:],
         body: Encodable? = nil
     ) async throws -> T {
+        let token = try? TokenManager.getAccessToken()
+        let refreshToken = try? TokenManager.getRefreshToken()
+        if token == nil && endpoint != .createSession {
+            baseURL = URL(string: "https://public.api.bsky.app/xrpc")!
+        }
         var builder = RequestBuilder(baseURL: baseURL, path: endpoint.path, method: method)
         
         // Add query parameters if present
@@ -90,7 +107,19 @@ class NetworkClient: NetworkClientProtocol {
             "Accept": "application/json"
         ])
         
-        let request = try builder.build()
+        
+        
+        
+        var request = try builder.build()
+        
+        if token != nil && endpoint != .refreshSession {
+            request.setValue("Bearer \(token!)", forHTTPHeaderField: "Authorization")
+        }
+        
+        if endpoint == .refreshSession && refreshToken != nil {
+            request.setValue("Bearer \(refreshToken!)", forHTTPHeaderField: "Authorization")
+        }
+        
         Logger.logRequest(request)
         
         do {
@@ -109,14 +138,18 @@ class NetworkClient: NetworkClientProtocol {
             case 401:
                 throw NetworkError.authenticationRequired
             default:
-                let errorResponse = try? decoder.decode(ErrorResponseDTO.self, from: data)
-                throw NetworkError.serverError(errorResponse?.message ?? "Unknown error")
+                let errorResponse = try? decoder.decode(ErrorResponse.self, from: data)
+                if let errorResponse = errorResponse {
+                    throw NetworkError.serverError(errorResponse)
+                } else {
+                    throw NetworkError.unknownError
+                }
             }
         } catch let error as NetworkError {
-            Logger.error(error.localizedDescription, category: .network)
+            Logger.error(error.localizedDescription, error: error, category: .network)
             throw error
         } catch {
-            Logger.error(error.localizedDescription, category: .network)
+            Logger.error(error.localizedDescription, error: error, category: .network)
             throw NetworkError.networkError(error)
         }
     }

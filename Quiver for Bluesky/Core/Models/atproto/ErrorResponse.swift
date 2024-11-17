@@ -1,8 +1,6 @@
-struct ErrorResponseDTO: Decodable {
-    let error: String
-    let message: String
-    
-    // Optional fields that might come from the API
+struct ErrorResponse: Decodable {
+    let error: String?
+    let message: String?
     let statusCode: Int?
     let errorType: String?
     

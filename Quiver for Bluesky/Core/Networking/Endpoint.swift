@@ -1,11 +1,19 @@
 enum Endpoint {
-    case createSession(identifier: String, password: String)
-    case refreshSession(refreshJwt: String)
+    case createSession
+    case refreshSession
     case getTimeline
-    case createPost(text: String)
-    case getProfile(actor: String)
+    case createPost
+    case getProfile
     case popularFeedGenerators
-    case getFeed(uri: String)
+    case getFeed
+    case getSession
+    case deleteSession
+    case createRecord
+    case deleteRecord
+    case getAuthorFeed
+    case getPostThread
+    case getListNotifications
+    case getPosts
     
     var path: String {
         switch self {
@@ -16,13 +24,14 @@ enum Endpoint {
             case .getProfile: return "app.bsky.actor.getProfile"
             case .popularFeedGenerators: return "app.bsky.unspecced.getPopularFeedGenerators"
             case .getFeed: return "app.bsky.feed.getFeed"
-        }
-    }
-    
-    var method: HTTPMethod {
-        switch self {
-            case .getTimeline, .getProfile, .popularFeedGenerators, .getFeed: return .get
-            case .createPost, .createSession, .refreshSession: return .post
+            case .getSession: return "com.atproto.server.getSession"
+            case .deleteSession: return "com.atproto.server.deleteSession"
+            case .createRecord: return "com.atproto.repo.createRecord"
+            case .deleteRecord: return "com.atproto.repo.deleteRecord"
+            case .getAuthorFeed: return "app.bsky.feed.getAuthorFeed"
+            case .getPostThread: return "app.bsky.feed.getPostThread"
+            case .getListNotifications: return "app.bsky.notification.listNotifications"
+            case .getPosts: return "app.bsky.feed.getPosts"
         }
     }
 }
@@ -38,7 +47,8 @@ enum NetworkError: Error {
     case invalidURL
     case invalidResponse
     case authenticationRequired
-    case serverError(String)
+    case serverError(ErrorResponse)
     case decodingError(Error)
     case networkError(Error)
+    case unknownError
 }

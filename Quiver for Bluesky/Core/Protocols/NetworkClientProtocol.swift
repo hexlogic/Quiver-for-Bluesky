@@ -1,4 +1,4 @@
-protocol NetworkClientProtocol {
+protocol NetworkClientProtocol: Service {
     func request<T: Decodable>(
         endpoint: Endpoint,
         method: HTTPMethod,
