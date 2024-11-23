@@ -5,7 +5,7 @@ struct BlueskyProfileModel: Codable {
     let avatar: String?
     let associated: Associated?
     let viewer: Viewer?
-    let labels: [String]?
+    let labels: [LabelModel]?
     let createdAt: String?
     let description: String?
     let indexedAt: String?
@@ -61,7 +61,7 @@ struct BlueskyProfileModel: Codable {
         self.avatar = try container.decodeIfPresent(String.self, forKey: .avatar)
         self.associated = try container.decodeIfPresent(BlueskyProfileModel.Associated.self, forKey: .associated)
         self.viewer = try container.decodeIfPresent(BlueskyProfileModel.Viewer.self, forKey: .viewer)
-        self.labels = try container.decodeIfPresent([String].self, forKey: .labels)
+        self.labels = try container.decodeIfPresent([LabelModel].self, forKey: .labels)
         self.createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
         self.description = try container.decodeIfPresent(String.self, forKey: .description)
         self.indexedAt = try container.decodeIfPresent(String.self, forKey: .indexedAt)
@@ -127,21 +127,27 @@ struct BlueskyProfileModel: Codable {
     struct Viewer: Codable {
         let muted: Bool?
         let blockedBy: Bool?
+        let following: String?
+        let knownFollowers: KnownFollowers?
         
         enum CodingKeys: String, CodingKey {
-            case muted, blockedBy
+            case muted, blockedBy, following, knownFollowers
         }
         
         init(from decoder: any Decoder) throws {
             let container: KeyedDecodingContainer<BlueskyProfileModel.Viewer.CodingKeys> = try decoder.container(keyedBy: BlueskyProfileModel.Viewer.CodingKeys.self)
             self.muted = try container.decodeIfPresent(Bool.self, forKey: BlueskyProfileModel.Viewer.CodingKeys.muted)
             self.blockedBy = try container.decodeIfPresent(Bool.self, forKey: BlueskyProfileModel.Viewer.CodingKeys.blockedBy)
+            self.following = try container.decodeIfPresent(String.self, forKey: BlueskyProfileModel.Viewer.CodingKeys.following)
+            self.knownFollowers = try container.decodeIfPresent(KnownFollowers.self, forKey: BlueskyProfileModel.Viewer.CodingKeys.knownFollowers)
         }
         
         func encode(to encoder: any Encoder) throws {
             var container: KeyedEncodingContainer<BlueskyProfileModel.Viewer.CodingKeys> = encoder.container(keyedBy: BlueskyProfileModel.Viewer.CodingKeys.self)
             try container.encodeIfPresent(muted, forKey: BlueskyProfileModel.Viewer.CodingKeys.muted)
             try container.encodeIfPresent(blockedBy, forKey: BlueskyProfileModel.Viewer.CodingKeys.blockedBy)
+            try container.encodeIfPresent(following, forKey: BlueskyProfileModel.Viewer.CodingKeys.following)
+            try container.encodeIfPresent(knownFollowers, forKey: BlueskyProfileModel.Viewer.CodingKeys.knownFollowers)
         }
     }
     
@@ -165,4 +171,9 @@ struct BlueskyProfileModel: Codable {
             try container.encodeIfPresent(uri, forKey: BlueskyProfileModel.PinnedPost.CodingKeys.uri)
         }
     }
+}
+
+struct KnownFollowers: Codable {
+    let count: Int?
+    let followers: [AuthorModel]?
 }

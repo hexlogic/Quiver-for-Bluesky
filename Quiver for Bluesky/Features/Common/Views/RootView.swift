@@ -52,6 +52,7 @@ struct RootView: View {
                     NavigationStack(path: $profileCoordinator.path) {
                         ProfileView(profileDid: authViewModel.session?.did)
                             .environmentObject(profileCoordinator)
+                            .environmentObject(authViewModel)
                             .navigationDestination(for: Route.self) { route in
                                 switch route {
                                 case .profile(let profileDid):

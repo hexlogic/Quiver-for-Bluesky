@@ -11,10 +11,12 @@ class ProfileViewModel: ObservableObject {
     private var cursor: String?
     
     @MainActor
-    func initProfile(of userDid: String?) async {
-        isLoading = true
+    func initProfile(of userDid: String?, withLoading: Bool = true) async {
         defer {
             isLoading = false
+        }
+        if withLoading {
+            isLoading = true
         }
         if let userDid = userDid {
             do {
@@ -54,4 +56,28 @@ class ProfileViewModel: ObservableObject {
             Logger.error("ProfileViewModel::loadFeedNextIfNeeded:", error: error)
         }
     }
+    
+    func follow(from did: String) async {
+        do {
+            let _ = try await blueskyService.createRecord(record: CreateActionRecordDTO(collection: .follow, record: ActionRecordDTORecord(type: .follow, createdAt: Date.now, subject: .profile(profile?.did ?? "")), repo: did))
+            
+            await initProfile(of: profile?.did, withLoading: false)
+        } catch {
+            Logger.error("ProfileViewModel::follow:", error: error)
+        }
+    }
+    
+    func unfollow() async {
+        if let (repo, recordKey) = parseAtURL(profile?.viewer?.following ?? "") {
+            do {
+                let payload = DeleteActionRecordDTO(collection: .follow, repo: repo, rkey: recordKey)
+                let _ = try await blueskyService.deleteRecord(record: payload)
+                await initProfile(of: profile?.did, withLoading: false)
+            } catch {
+                Logger.error("ProfileViewModel::unfollow:", error: error)
+            }
+        }
+    }
+    
+    
 }

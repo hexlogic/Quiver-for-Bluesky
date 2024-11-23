@@ -51,12 +51,9 @@ struct PostActionsView: View {
                 }
                 Spacer()
                 HStack {
-                    if postActionViewModel.like != nil {
-                        Image(systemName: "heart.fill")
-                            .foregroundStyle(.red)
-                    } else {
-                        Image(systemName: "heart")
-                    }
+                    Image(systemName: postActionViewModel.like != nil ? "heart.fill": "heart")
+                        .contentTransition(.symbolEffect(.replace))
+                        .foregroundStyle(.red)
                     
                     Text("\(likeCount)")
                 }

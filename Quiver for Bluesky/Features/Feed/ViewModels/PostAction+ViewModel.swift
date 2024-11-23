@@ -14,7 +14,7 @@ class PostActionsViewModel: ObservableObject {
     
     @MainActor
     func likePost(postUri: String, postCid: String, userDid: String) async {
-        let payload = CreateActionRecordDTO(collection: .like, record: ActionRecordDTORecord(type: .like, createdAt: Date.now, subject: SubjectModel(cid: postCid, uri: postUri)), repo: userDid)
+        let payload = CreateActionRecordDTO(collection: .like, record: ActionRecordDTORecord(type: .like, createdAt: Date.now, subject: .post(SubjectModel.Post(cid: postCid, uri: postUri))), repo: userDid)
         
         
         let response = try? await blueskyService.createRecord(record: payload)
@@ -26,7 +26,7 @@ class PostActionsViewModel: ObservableObject {
     
     @MainActor
     func repost(postUri: String, postCid: String, userDid: String) async {
-        let payload = CreateActionRecordDTO(collection: .repost, record: ActionRecordDTORecord(type: .repost, createdAt: Date.now, subject: SubjectModel(cid: postCid, uri: postUri)), repo: userDid)
+        let payload = CreateActionRecordDTO(collection: .repost, record: ActionRecordDTORecord(type: .repost, createdAt: Date.now, subject: .post(SubjectModel.Post(cid: postCid, uri: postUri))), repo: userDid)
         
         let response = try? await blueskyService.createRecord(record: payload)
         withAnimation {
@@ -58,11 +58,5 @@ class PostActionsViewModel: ObservableObject {
         
     }
     
-    func parseAtURL(_ url: String) -> (did: String, recordKey: String)? {
-        let withoutPrefix = url.replacingOccurrences(of: "at://", with: "")
-        let components = withoutPrefix.components(separatedBy: "/")
-        
-        guard components.count >= 3 else { return nil }
-        return (did: components[0], recordKey: components[2])
-    }
+
 }

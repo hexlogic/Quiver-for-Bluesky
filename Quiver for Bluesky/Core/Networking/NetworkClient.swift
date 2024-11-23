@@ -88,6 +88,8 @@ class NetworkClient: NetworkClientProtocol {
         let refreshToken = try? TokenManager.getRefreshToken()
         if token == nil && endpoint != .createSession {
             baseURL = URL(string: "https://public.api.bsky.app/xrpc")!
+        } else {
+            baseURL = URL(string: "https://bsky.social/xrpc")!
         }
         var builder = RequestBuilder(baseURL: baseURL, path: endpoint.path, method: method)
         

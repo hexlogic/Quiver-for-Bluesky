@@ -8,6 +8,7 @@ struct FeedView: View {
     @State private var newPostSheet = false
     
     @EnvironmentObject private var coordinator: NavigationCoordinator
+    @EnvironmentObject private var authViewModel: AuthViewModel
     
     private var feedUri: String?
     
@@ -65,6 +66,11 @@ struct FeedView: View {
                 await viewModel.initFeed(isRefreshing: false)
             }
         }
+        .onChange(of: authViewModel.session, {
+            Task {
+                await viewModel.initFeed(isRefreshing: false)
+            }
+        })
         .environmentObject(coordinator)
     }
 }

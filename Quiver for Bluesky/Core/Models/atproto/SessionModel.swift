@@ -1,6 +1,6 @@
 import Foundation
 
-struct SessionModel: Codable {
+struct SessionModel: Codable, Equatable {
     let did: String?
     let didDoc: DidDocModel?
     let handle: String?
@@ -10,6 +10,16 @@ struct SessionModel: Codable {
     let accessJwt: String?
     let refreshJwt: String?
     let active: Bool?
+    
+    static func == (lhs: SessionModel, rhs: SessionModel) -> Bool {
+        lhs.did == rhs.did
+        && lhs.handle == rhs.handle
+        && lhs.email == rhs.email
+        && lhs.emailConfirmed == rhs.emailConfirmed
+        && lhs.emailAuthFactor == rhs.emailAuthFactor
+        && lhs.accessJwt == rhs.accessJwt
+        && lhs.refreshJwt == rhs.refreshJwt
+    }
     
     enum CodingKeys: String, CodingKey {
         case did
