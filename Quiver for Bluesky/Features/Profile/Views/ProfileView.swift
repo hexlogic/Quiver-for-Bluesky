@@ -121,25 +121,6 @@ struct ProfileView: View {
             if viewModel.profile != nil {
                 FeedSwitcherView(selectedFeed: $selectedFeed, profile: viewModel.profile!)
             }
-           
-//            Picker(selection: $selectedFeed) {
-//                Text("Posts & Threads").tag(AuthorFeedFilter.postsAndAuthorThreads)
-//                Text("Replies").tag(AuthorFeedFilter.postsWithReplies)
-//                Text("Media").tag(AuthorFeedFilter.postsWithMedia)
-//                if viewModel.profile?.associated?.feedgens != nil {
-//                    Text("Feeds").tag(AuthorFeedFilter.feeds)
-//                }
-//                if viewModel.profile?.associated?.starterPacks != nil {
-//                    Text("Starter Packs").tag(AuthorFeedFilter.starterPacks)
-//                }
-//                if viewModel.profile?.associated?.lists != nil {
-//                    Text("Lists").tag(AuthorFeedFilter.lists)
-//                }
-//            } label: {
-//                Text("Select the feed")
-//            }
-//            .pickerStyle(.menu)
-//            .padding()
             LazyVStack {
                 let posts = viewModel.feed ?? []
                 ForEach(posts) { post in
